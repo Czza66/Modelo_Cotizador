@@ -9,6 +9,7 @@ from app.services.modelo_service import (
 from fastapi import FastAPI, UploadFile, File
 from pathlib import Path
 import shutil
+import traceback
 
 app = FastAPI()
 
@@ -32,24 +33,39 @@ def prediccion(data: ProyectoRequest):
 
 @app.post("/cargar-excel")
 def cargar_excel(file: UploadFile = File(...)):
+    try:
+        print("Archivo recibido:", file.filename)
+        print("Content-Type:", file.content_type)
 
-    if not file.filename.endswith(".xlsx"):
+        if not file.filename.lower().endswith(".xlsx"):
+            return {
+                "success": False,
+                "error": "Solo se permiten archivos Excel con extensión .xlsx"
+            }
+
+        ruta_resources = Path("app/resources")
+        ruta_resources.mkdir(parents=True, exist_ok=True)
+
+        ruta_archivo = ruta_resources / "proyectos_entrenamiento.xlsx"
+
+        with open(ruta_archivo, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        print("Archivo guardado en:", ruta_archivo)
+
+        resultado_entrenamiento = entrenar_modelo()
+
         return {
-            "error": "Solo se permiten archivos Excel con extensión .xlsx"
+            "success": True,
+            "mensaje": "Archivo cargado y modelo entrenado correctamente",
+            "resultado_entrenamiento": resultado_entrenamiento
         }
 
-    ruta_resources = Path("app/resources")
-    ruta_resources.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print("ERROR EN /cargar-excel")
+        print(traceback.format_exc())
 
-    ruta_archivo = ruta_resources / "proyectos_entrenamiento.xlsx"
-
-    with open(ruta_archivo, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    resultado_entrenamiento = entrenar_modelo()
-
-    return {
-        "mensaje": "Archivo cargado y modelo entrenado correctamente",
-        "archivo_guardado": "proyectos_entrenamiento.xlsx",
-        "resultado_entrenamiento": resultado_entrenamiento
-    }
+        return {
+            "success": False,
+            "error": str(e)
+        }
