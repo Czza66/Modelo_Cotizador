@@ -6,10 +6,12 @@ from app.services.modelo_service import (
     predecir
 )
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI
+from pydantic import BaseModel
 from pathlib import Path
-import shutil
-import traceback
+import base64
+import pandas as pd
+
 
 app = FastAPI()
 
@@ -30,40 +32,38 @@ def entrenar():
 def prediccion(data: ProyectoRequest):
     return predecir(data)
 
+class ArchivoRequest(BaseModel):
+    filename: str
+    content: str
+
 
 @app.post("/cargar-excel")
-def cargar_excel(file: UploadFile = File(...)):
-    try:
-        print("Archivo recibido:", file.filename)
-        print("Content-Type:", file.content_type)
+def cargar_excel(request: ArchivoRequest):
 
-        if not file.filename.lower().endswith(".xlsx"):
-            return {
-                "success": False,
-                "error": "Solo se permiten archivos Excel con extensión .xlsx"
-            }
+    try:
 
         ruta_resources = Path("app/resources")
         ruta_resources.mkdir(parents=True, exist_ok=True)
 
         ruta_archivo = ruta_resources / "proyectos_entrenamiento.xlsx"
 
-        with open(ruta_archivo, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        archivo_bytes = base64.b64decode(request.content)
 
-        print("Archivo guardado en:", ruta_archivo)
+        with open(ruta_archivo, "wb") as f:
+            f.write(archivo_bytes)
+
+        df = pd.read_excel(ruta_archivo, engine="openpyxl")
 
         resultado_entrenamiento = entrenar_modelo()
 
         return {
             "success": True,
-            "mensaje": "Archivo cargado y modelo entrenado correctamente",
+            "mensaje": "Archivo cargado correctamente",
+            "filas": len(df),
             "resultado_entrenamiento": resultado_entrenamiento
         }
 
     except Exception as e:
-        print("ERROR EN /cargar-excel")
-        print(traceback.format_exc())
 
         return {
             "success": False,
