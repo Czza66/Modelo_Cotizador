@@ -179,11 +179,8 @@ La solución utiliza Swagger UI como interfaz inicial de pruebas.
 
 Sin embargo, la API fue diseñada para poder conectarse posteriormente a:
 
-- aplicaciones web
-- ERP
-- sistemas administrativos
-- dashboards
-- aplicaciones móviles
+- power apps
+- power automate
 
 ---
 
@@ -205,7 +202,7 @@ Esto permitió convertir la IA en una herramienta de apoyo para toma de decision
 
 # Cómo funciona la interfaz final y cuál es su objetivo
 
-La interfaz principal funciona mediante Swagger UI.
+La interfaz principal funciona mediante Power Apps.
 
 El usuario puede:
 
@@ -248,7 +245,7 @@ uvicorn app.main:app --reload
 ## Abrir Swagger
 
 ```text
-http://127.0.0.1:8000/docs
+https://modelo-cotizador.onrender.com/docs#/
 ```
 
 ---
@@ -258,19 +255,13 @@ http://127.0.0.1:8000/docs
 | Método | Endpoint | Descripción |
 |---|---|---|
 | GET | `/` | Verificar funcionamiento API |
-| POST | `/entrenar` | Entrenar modelo |
 | POST | `/predecir` | Generar predicción |
 | POST | `/cargar-excel` | Cargar nuevo dataset |
 
 ---
 
-# Autor
+# Video en Youtube
+https://youtu.be/d_wluzNgsz4
 
-Proyecto académico desarrollado para aplicar conceptos de:
-
-- Inteligencia Artificial
-- Machine Learning
-- APIs REST
-- FastAPI
-- Ciencia de datos
-- Predicción de proyectos tecnológicos
+# AUTOR
+Desarrollador por Juan Sebastian Briñez Capera, Ingenieria de Software en UComepensar
