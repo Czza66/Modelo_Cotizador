@@ -35,22 +35,35 @@ def prediccion(data: ProyectoRequest):
 class ArchivoRequest(BaseModel):
     filename: str
     content: str
+    
+
+def guardar_excel_desde_base64(content: str, ruta_archivo: Path):
+    # Por si viene como data:...;base64,XXXX
+    if "," in content:
+        content = content.split(",", 1)[1]
+
+    archivo_bytes = base64.b64decode(content)
+
+    # Si quedó doble base64, decodifica una segunda vez
+    if not archivo_bytes.startswith(b"PK") and archivo_bytes.startswith(b"UEs"):
+        archivo_bytes = base64.b64decode(archivo_bytes)
+
+    if not archivo_bytes.startswith(b"PK"):
+        raise ValueError("El archivo decodificado no parece ser un .xlsx válido")
+
+    with open(ruta_archivo, "wb") as f:
+        f.write(archivo_bytes)
 
 
 @app.post("/cargar-excel")
 def cargar_excel(request: ArchivoRequest):
-
     try:
-
         ruta_resources = Path("app/resources")
         ruta_resources.mkdir(parents=True, exist_ok=True)
 
         ruta_archivo = ruta_resources / "proyectos_entrenamiento.xlsx"
 
-        archivo_bytes = base64.b64decode(request.content)
-
-        with open(ruta_archivo, "wb") as f:
-            f.write(archivo_bytes)
+        guardar_excel_desde_base64(request.content, ruta_archivo)
 
         df = pd.read_excel(ruta_archivo, engine="openpyxl")
 
@@ -64,7 +77,6 @@ def cargar_excel(request: ArchivoRequest):
         }
 
     except Exception as e:
-
         return {
             "success": False,
             "error": str(e)
